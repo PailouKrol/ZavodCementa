@@ -54,6 +54,33 @@ namespace ZavodCementa
                 )";
             using var cmdDeliveries = new SQLiteCommand(createDeliveriesTable, connection);
             cmdDeliveries.ExecuteNonQuery();
+
+            // Таблица поставщиков (НОВАЯ)
+            string createSuppliersTable = @"
+                CREATE TABLE IF NOT EXISTS Suppliers (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Name TEXT NOT NULL,
+                    ContactPerson TEXT NOT NULL,
+                    Phone TEXT NOT NULL,
+                    Email TEXT,
+                    Address TEXT,
+                    Material TEXT NOT NULL
+                )";
+            using var cmdSuppliers = new SQLiteCommand(createSuppliersTable, connection);
+            cmdSuppliers.ExecuteNonQuery();
+
+            // Таблица оборудования (НОВАЯ)
+            string createEquipmentTable = @"
+                CREATE TABLE IF NOT EXISTS Equipment (
+                    Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    Name TEXT NOT NULL,
+                    Type TEXT NOT NULL,
+                    Status TEXT NOT NULL,
+                    PurchaseDate TEXT,
+                    ResponsibleEmployee TEXT
+                )";
+            using var cmdEquipment = new SQLiteCommand(createEquipmentTable, connection);
+            cmdEquipment.ExecuteNonQuery();
         }
 
         public static DataTable GetDataTable(string sql)

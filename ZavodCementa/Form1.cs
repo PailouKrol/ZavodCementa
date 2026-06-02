@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Data.SQLite;
 using System.Drawing;
 using System.Windows.Forms;
-using ZavodCementa;
+using System.Data.SQLite;
+using System.Collections.Generic;
 
 namespace ZavodCementa
 {
@@ -14,6 +13,8 @@ namespace ZavodCementa
         private DeliveryControl deliveryControl;
         private ClientsControl clientsControl;
         private EmployeesControl employeesControl;
+        private SuppliersControl suppliersControl;      // НОВЫЙ
+        private EquipmentControl equipmentControl;      // НОВЫЙ
 
         public Form1()
         {
@@ -53,6 +54,18 @@ namespace ZavodCementa
                     employeesControl.Dock = DockStyle.Fill;
                     this.panelRight.Controls.Add(employeesControl);
                     break;
+                case "Поставщики":
+                    if (suppliersControl == null)
+                        suppliersControl = new SuppliersControl();
+                    suppliersControl.Dock = DockStyle.Fill;
+                    this.panelRight.Controls.Add(suppliersControl);
+                    break;
+                case "Оборудование":
+                    if (equipmentControl == null)
+                        equipmentControl = new EquipmentControl();
+                    equipmentControl.Dock = DockStyle.Fill;
+                    this.panelRight.Controls.Add(equipmentControl);
+                    break;
             }
         }
     }
@@ -72,13 +85,13 @@ namespace ZavodCementa
         private void InitializeMaterials()
         {
             materials = new List<Material>
-            {
-                new Material { Name = "Цемент М500", Quantity = 3200, MaxQuantity = 5000, Unit = "кг", Color = Color.SteelBlue },
-                new Material { Name = "Песок", Quantity = 1800, MaxQuantity = 3000, Unit = "кг", Color = Color.SandyBrown },
-                new Material { Name = "Гравий", Quantity = 4200, MaxQuantity = 5000, Unit = "кг", Color = Color.DarkGray },
-                new Material { Name = "Глина", Quantity = 950, MaxQuantity = 2000, Unit = "кг", Color = Color.SaddleBrown },
-                new Material { Name = "Добавка (пластификатор)", Quantity = 340, MaxQuantity = 500, Unit = "л", Color = Color.LightGreen }
-            };
+        {
+            new Material { Name = "Цемент М500", Quantity = 3200, MaxQuantity = 5000, Unit = "кг", Color = Color.SteelBlue },
+            new Material { Name = "Песок", Quantity = 1800, MaxQuantity = 3000, Unit = "кг", Color = Color.SandyBrown },
+            new Material { Name = "Гравий", Quantity = 4200, MaxQuantity = 5000, Unit = "кг", Color = Color.DarkGray },
+            new Material { Name = "Глина", Quantity = 950, MaxQuantity = 2000, Unit = "кг", Color = Color.SaddleBrown },
+            new Material { Name = "Добавка (пластификатор)", Quantity = 340, MaxQuantity = 500, Unit = "л", Color = Color.LightGreen }
+        };
         }
 
         private void SetupUI()
@@ -109,26 +122,19 @@ namespace ZavodCementa
                 Margin = new Padding(5),
                 BackColor = Color.White,
                 BorderStyle = BorderStyle.FixedSingle,
-                Width = 800  // Фиксированная ширина панели
+                Width = 750
             };
 
-            // Используем горизонтальную раскладку
-            FlowLayoutPanel flowPanel = new FlowLayoutPanel
+            TableLayoutPanel table = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
-                FlowDirection = FlowDirection.LeftToRight,
-                Padding = new Padding(5),
-                WrapContents = false
+                ColumnCount = 2,
+                RowCount = 1
             };
+            table.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 70));
+            table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
-            // ========== ЛЕВАЯ ЧАСТЬ: КВАДРАТ С БУКВОЙ ==========
-            Panel leftPanel = new Panel
-            {
-                Width = 70,
-                Height = 70,
-                Margin = new Padding(0, 5, 10, 5)  // Добавил отступ справа
-            };
-
+            // ========== КАРТИНКА ПО ЦЕНТРУ ==========
             PictureBox picture = new PictureBox
             {
                 Size = new Size(48, 48),
@@ -136,57 +142,45 @@ namespace ZavodCementa
                 Image = GenerateMaterialImage(mat.Name, mat.Color),
                 BackColor = Color.Transparent
             };
-            // Центрируем картинку внутри левой панели
-            picture.Location = new Point((leftPanel.Width - picture.Width) / 2, (leftPanel.Height - picture.Height) / 2);
-            leftPanel.Controls.Add(picture);
+            picture.Location = new Point((70 - 48) / 2, (95 - 48) / 2);
+            table.Controls.Add(picture, 0, 0);
 
-            // ========== ПРАВАЯ ЧАСТЬ: ИНФОРМАЦИЯ ==========
-            Panel rightPanel = new Panel
-            {
-                Width = 700,  // Увеличенная ширина
-                Height = 70,
-                Margin = new Padding(0, 5, 0, 5)
-            };
+            Panel rightPanel = new Panel { Dock = DockStyle.Fill, Padding = new Padding(5) };
 
-            // Название материала (увеличено)
             Label lblName = new Label
             {
                 Text = mat.Name,
-                Font = new Font("Segoe UI", 11, FontStyle.Bold),
+                Font = new Font("Segoe UI", 10, FontStyle.Bold),
                 AutoSize = true,
-                Location = new Point(0, 0),
-                MinimumSize = new Size(200, 0)  // Минимальная ширина для длинных названий
+                Location = new Point(0, 0)
             };
 
-            // ProgressBar (растянут на всю ширину)
             ProgressBar bar = new ProgressBar
             {
                 Maximum = 100,
                 Value = (int)((double)mat.Quantity / mat.MaxQuantity * 100),
-                Width = rightPanel.Width - 100,  // Оставляем место для кнопок
                 Height = 25,
-                Location = new Point(0, 28)
+                Location = new Point(0, 25),
+                Width = 500
             };
 
-            // Количество
             Label lblQuantity = new Label
             {
                 Text = $"{mat.Quantity} / {mat.MaxQuantity} {mat.Unit}",
                 AutoSize = true,
-                Location = new Point(0, 56),
+                Location = new Point(0, 55),
                 Font = new Font("Segoe UI", 9),
                 ForeColor = Color.DarkGreen
             };
 
-            // Кнопка "+"
+            // ========== КНОПКИ + и - ==========
             Button btnPlus = new Button
             {
                 Text = "+",
-                Location = new Point(rightPanel.Width - 70, 28),
-                Size = new Size(32, 25),
+                Size = new Size(40, 27),
+                Location = new Point(580, 50),
                 BackColor = Color.LightGreen,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                FlatStyle = FlatStyle.Flat
+                Font = new Font("Segoe UI", 10, FontStyle.Bold)
             };
             btnPlus.Click += (s, e) =>
             {
@@ -194,20 +188,17 @@ namespace ZavodCementa
                     mat.Quantity += 100;
                 else
                     mat.Quantity = mat.MaxQuantity;
-
                 bar.Value = (int)(mat.Quantity / mat.MaxQuantity * 100);
                 lblQuantity.Text = $"{mat.Quantity} / {mat.MaxQuantity} {mat.Unit}";
             };
 
-            // Кнопка "-"
             Button btnMinus = new Button
             {
                 Text = "-",
-                Location = new Point(rightPanel.Width - 35, 28),
-                Size = new Size(32, 25),
+                Size = new Size(40, 27),
+                Location = new Point(625, 50),
                 BackColor = Color.LightCoral,
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                FlatStyle = FlatStyle.Flat
+                Font = new Font("Segoe UI", 10, FontStyle.Bold)
             };
             btnMinus.Click += (s, e) =>
             {
@@ -215,7 +206,6 @@ namespace ZavodCementa
                     mat.Quantity -= 100;
                 else
                     mat.Quantity = 0;
-
                 bar.Value = (int)(mat.Quantity / mat.MaxQuantity * 100);
                 lblQuantity.Text = $"{mat.Quantity} / {mat.MaxQuantity} {mat.Unit}";
             };
@@ -226,23 +216,9 @@ namespace ZavodCementa
             rightPanel.Controls.Add(btnPlus);
             rightPanel.Controls.Add(btnMinus);
 
-            // Добавляем левую и правую панели
-            flowPanel.Controls.Add(leftPanel);
-            flowPanel.Controls.Add(rightPanel);
+            table.Controls.Add(rightPanel, 1, 0);
+            mainPanel.Controls.Add(table);
 
-            // Обработчик изменения размера для адаптации
-            mainPanel.Resize += (s, e) =>
-            {
-                if (mainPanel.Width > 400)
-                {
-                    rightPanel.Width = mainPanel.Width - leftPanel.Width - 30;
-                    bar.Width = rightPanel.Width - 80;
-                    btnPlus.Location = new Point(rightPanel.Width - 70, 28);
-                    btnMinus.Location = new Point(rightPanel.Width - 35, 28);
-                }
-            };
-
-            mainPanel.Controls.Add(flowPanel);
             return mainPanel;
         }
 
@@ -502,6 +478,168 @@ namespace ZavodCementa
                 using var connection = DatabaseHelper.GetConnection();
                 connection.Open();
                 using var adapter = new SQLiteDataAdapter("SELECT * FROM Employees", connection);
+                var commandBuilder = new SQLiteCommandBuilder(adapter);
+                adapter.UpdateCommand = commandBuilder.GetUpdateCommand();
+                adapter.InsertCommand = commandBuilder.GetInsertCommand();
+                adapter.DeleteCommand = commandBuilder.GetDeleteCommand();
+                adapter.Update((DataTable)bindingSource.DataSource);
+
+                MessageBox.Show("Данные успешно сохранены!", "Сохранение", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                LoadData();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при сохранении: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+    }
+
+    // ==================== КОНТРОЛ ПОСТАВЩИКОВ (НОВЫЙ) ====================
+    public class SuppliersControl : UserControl
+    {
+        private DataGridView dataGridView;
+        private BindingSource bindingSource;
+        private DataTable dataTable;
+        private Button btnSave;
+
+        public SuppliersControl()
+        {
+            SetupUI();
+            LoadData();
+        }
+
+        private void SetupUI()
+        {
+            dataGridView = new DataGridView
+            {
+                Dock = DockStyle.Fill,
+                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+                AllowUserToAddRows = true,
+                BackgroundColor = Color.White
+            };
+
+            btnSave = new Button
+            {
+                Text = "Сохранить изменения",
+                Dock = DockStyle.Bottom,
+                Height = 30,
+                BackColor = Color.LightGreen
+            };
+            btnSave.Click += BtnSave_Click;
+
+            bindingSource = new BindingSource();
+            dataGridView.DataSource = bindingSource;
+
+            var mainPanel = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                RowCount = 2,
+                RowStyles = { new RowStyle(SizeType.Percent, 100F), new RowStyle(SizeType.Absolute, 35F) }
+            };
+            mainPanel.Controls.Add(dataGridView, 0, 0);
+            mainPanel.Controls.Add(btnSave, 0, 1);
+            this.Controls.Add(mainPanel);
+        }
+
+        private void LoadData()
+        {
+            dataTable = DatabaseHelper.GetDataTable("SELECT Id, Name, ContactPerson, Phone, Email, Address, Material FROM Suppliers");
+            if (dataTable.Columns.Contains("Id"))
+                dataTable.Columns["Id"].ColumnMapping = MappingType.Hidden;
+            bindingSource.DataSource = dataTable;
+        }
+
+        private void BtnSave_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                dataGridView.EndEdit();
+                bindingSource.EndEdit();
+
+                using var connection = DatabaseHelper.GetConnection();
+                connection.Open();
+                using var adapter = new SQLiteDataAdapter("SELECT * FROM Suppliers", connection);
+                var commandBuilder = new SQLiteCommandBuilder(adapter);
+                adapter.UpdateCommand = commandBuilder.GetUpdateCommand();
+                adapter.InsertCommand = commandBuilder.GetInsertCommand();
+                adapter.DeleteCommand = commandBuilder.GetDeleteCommand();
+                adapter.Update((DataTable)bindingSource.DataSource);
+
+                MessageBox.Show("Данные успешно сохранены!", "Сохранение", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                LoadData();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при сохранении: {ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+    }
+
+    // ==================== КОНТРОЛ ОБОРУДОВАНИЯ (НОВЫЙ) ====================
+    public class EquipmentControl : UserControl
+    {
+        private DataGridView dataGridView;
+        private BindingSource bindingSource;
+        private DataTable dataTable;
+        private Button btnSave;
+
+        public EquipmentControl()
+        {
+            SetupUI();
+            LoadData();
+        }
+
+        private void SetupUI()
+        {
+            dataGridView = new DataGridView
+            {
+                Dock = DockStyle.Fill,
+                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+                AllowUserToAddRows = true,
+                BackgroundColor = Color.White
+            };
+
+            btnSave = new Button
+            {
+                Text = "Сохранить изменения",
+                Dock = DockStyle.Bottom,
+                Height = 30,
+                BackColor = Color.LightGreen
+            };
+            btnSave.Click += BtnSave_Click;
+
+            bindingSource = new BindingSource();
+            dataGridView.DataSource = bindingSource;
+
+            var mainPanel = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                RowCount = 2,
+                RowStyles = { new RowStyle(SizeType.Percent, 100F), new RowStyle(SizeType.Absolute, 35F) }
+            };
+            mainPanel.Controls.Add(dataGridView, 0, 0);
+            mainPanel.Controls.Add(btnSave, 0, 1);
+            this.Controls.Add(mainPanel);
+        }
+
+        private void LoadData()
+        {
+            dataTable = DatabaseHelper.GetDataTable("SELECT Id, Name, Type, Status, PurchaseDate, ResponsibleEmployee FROM Equipment");
+            if (dataTable.Columns.Contains("Id"))
+                dataTable.Columns["Id"].ColumnMapping = MappingType.Hidden;
+            bindingSource.DataSource = dataTable;
+        }
+
+        private void BtnSave_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                dataGridView.EndEdit();
+                bindingSource.EndEdit();
+
+                using var connection = DatabaseHelper.GetConnection();
+                connection.Open();
+                using var adapter = new SQLiteDataAdapter("SELECT * FROM Equipment", connection);
                 var commandBuilder = new SQLiteCommandBuilder(adapter);
                 adapter.UpdateCommand = commandBuilder.GetUpdateCommand();
                 adapter.InsertCommand = commandBuilder.GetInsertCommand();

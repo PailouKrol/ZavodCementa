@@ -55,7 +55,9 @@
             "Склад",
             "Доставка",
             "Клиенты",
-            "Сотрудники"});
+            "Сотрудники",
+            "Поставщики",
+            "Оборудование"});
             this.listBoxTabs.Location = new System.Drawing.Point(0, 0);
             this.listBoxTabs.Name = "listBoxTabs";
             this.listBoxTabs.Size = new System.Drawing.Size(200, 561);
